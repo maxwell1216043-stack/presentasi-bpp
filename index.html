@@ -26,9 +26,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .nav{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:1rem;z-index:100;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:3rem;padding:.6rem 1.4rem;}
 .nav button{background:none;border:none;color:#fff;cursor:pointer;padding:.3rem .6rem;border-radius:2rem;transition:background .2s;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;letter-spacing:.05em;}
 .nav button:hover{background:rgba(255,255,255,.15);}
+.nav button:focus-visible{outline:2px solid #7ec87e;outline-offset:4px;}
 .nav button:disabled{opacity:.3;cursor:default;}
 .dot-nav{position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:.5rem;z-index:100;}
-.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .3s;}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .3s;border:none;padding:0;}
+.dot:focus-visible{outline:2px solid #7ec87e;outline-offset:6px;}
 .dot.on{background:#7ec87e;transform:scale(1.4);}
 .slide-num{position:fixed;top:1.5rem;right:2rem;font-size:12px;color:rgba(255,255,255,.35);font-weight:400;letter-spacing:.1em;z-index:100;}
 
@@ -380,9 +382,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 <div class="slide-num" id="slideNum"></div>
 
 <div class="nav">
-  <button id="prevBtn" onclick="changeSlide(-1)" disabled>← Prev</button>
+  <button id="prevBtn" onclick="changeSlide(-1)" disabled aria-label="Previous slide">← Prev</button>
   <span id="navCount" style="font-size:13px;color:rgba(255,255,255,.4);min-width:50px;text-align:center;"></span>
-  <button id="nextBtn" onclick="changeSlide(1)">Next →</button>
+  <button id="nextBtn" onclick="changeSlide(1)" aria-label="Next slide">Next →</button>
 </div>
 
 <script>
@@ -394,14 +396,21 @@ let cur = 0;
 const n = slides.length;
 
 slides.forEach((_,i) => {
-  const d = document.createElement('div');
+  const d = document.createElement('button');
   d.className = 'dot' + (i===0?' on':'');
+  d.setAttribute('aria-label', `Go to slide ${i + 1}`);
   d.onclick = () => goTo(i);
   dots.appendChild(d);
 });
 
 function updateUI(){
-  document.querySelectorAll('.dot').forEach((d,i) => d.className = 'dot'+(i===cur?' on':''));
+  document.querySelectorAll('.dot').forEach((d,i) => {
+    d.className = 'dot'+(i===cur?' on':'');
+    d.setAttribute('aria-current', i === cur ? 'true' : 'false');
+  });
+  slides.forEach((s, i) => {
+    s.setAttribute('aria-hidden', i === cur ? 'false' : 'true');
+  });
   slideNum.textContent = (cur+1)+' / '+n;
   navCount.textContent = (cur+1)+' / '+n;
   document.getElementById('prevBtn').disabled = cur===0;
@@ -412,7 +421,6 @@ function goTo(idx){
   if(idx<0||idx>=n||idx===cur) return;
   slides[cur].classList.remove('active');
   cur = idx;
-  slides[cur].classList.remove('active');
   void slides[cur].offsetWidth;
   slides[cur].classList.add('active');
   updateUI();
